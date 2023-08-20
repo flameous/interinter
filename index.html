@@ -3,8 +3,22 @@
 
 <head>
     <style>
-        .button {
-            background-color: #e83434;
+        .bordered {
+            margin: 10px;
+            border: 3px solid #999;
+        }
+
+        .div-legend {
+            font-family: monospace;
+            font-size: 10px;
+            color: white;
+            display: inline-block;
+            margin: 20px;
+            padding: 10px;
+        }
+
+        .cmp-button {
+            background-color: #3f28c2;
             border: none;
             color: white;
             padding: 15px 32px;
@@ -15,16 +29,41 @@
             margin: 4px 2px;
         }
 
-        .unpicked {
-            opacity: 0.6;
+        .interest-button {
+            background-color: #e57979;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+        }
+
+        .pickedByMe {
+            background-color: #e83434;
+        }
+
+        .pickedByOther {
+            background-color: #3947e1;
+        }
+
+        .pickedByBoth {
+            background-color: #eb47eb;
         }
     </style>
 </head>
 <script>
+    let othersChoices = 0b0;
+    let choices = 0b0;
+
     function init() {
         let params = new URLSearchParams(window.location.search);
 
-        let encodedChoices = params.get("code");
+        othersChoices = parseInt(params.get("code"));
+
+        let url = new URL(window.location.href);
 
         let interests = [
             "Acting",
@@ -44,22 +83,15 @@
             "Fishing",
         ];
 
-        var choices = 0b0 | parseInt(encodedChoices);
-
-        let url = new URL(window.location.href);
-
-
+        url.search = params;
+        document.getElementById("result").textContent = url.toString();
 
         for (let idx in interests) {
             let button = document.createElement("button");
             button.textContent = interests[idx];
-            if ( (choices >> idx) % 2 == 0) {
-                button.className = "button unpicked";
-            } else {
-                button.className = "button";   
-            }
+            button.className = "interest-button";
 
-            button.onclick = function() {
+            button.onclick = function () {
                 let shift = 1 << (idx);
                 let old = choices;
 
@@ -67,13 +99,13 @@
 
                 if (choices < old) {
                     // unpicked
-                    this.className = "button unpicked";
+                    this.className = "interest-button";
                 } else {
                     // picked
-                    this.className = "button";
-                }   
-                
-                console.log(old.toString(2), "xor", shift.toString(2), " = result", choices.toString(2));
+                    this.className = "interest-button pickedByMe";
+                }
+
+                // console.log(old.toString(2), "xor", shift.toString(2), " = result", choices.toString(2));
 
                 params.set("code", choices.toString(10))
                 url.search = params;
@@ -83,7 +115,26 @@
 
             document.getElementById("interests").appendChild(button);
         }
-    }
+    };
+
+    function compare() {
+        let buttons = document.getElementsByClassName("interest-button");
+
+        let both = choices & othersChoices;
+        console.log("comparing...", choices.toString(2), "other", othersChoices.toString(2), "res", both.toString(2));
+
+        for (idx in buttons) {
+            let btn = buttons[idx];
+
+            if ((othersChoices >> idx) % 2 != 0) {
+                btn.className = "interest-button pickedByOther";
+            }
+
+            if ((both >> idx) % 2 != 0) {
+                btn.className = "interest-button pickedByBoth";
+            }
+        }
+    };
 
 
 
@@ -95,10 +146,16 @@
         Text 123
     </div>
     <p>Interests:</p>
-    <div style=" margin: 10px; border: 1px solid #999;" id="interests"></div>
+    <div class="bordered" id="interests"></div>
 
     <p>Share this URL:</p>
-    <p id="result">
+    <p id="result"></p>
+    <br>
+    <button class="cmp-button" onclick=compare()>Compare your choices</button>
+    <p>TL;DR</p>
+    <div class="div-legend pickedByMe">Your</div>
+    <div class="div-legend pickedByBoth">Both</div>
+    <div class="div-legend pickedByOther">Others</div>
 </body>
 
 </html>
