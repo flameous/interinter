@@ -1,6 +1,104 @@
 <!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        .button {
+            background-color: #e83434;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+        }
+
+        .unpicked {
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<script>
+    function init() {
+        let params = new URLSearchParams(window.location.search);
+
+        let encodedChoices = params.get("code");
+
+        let interests = [
+            "Acting",
+            "Dancing",
+            "Drawing",
+            "Painting",
+            "Photography",
+            "Podcasting",
+            "Welding",
+            "Writing",
+            "Cooking",
+            "Baking",
+            "Chess",
+            "Paintball",
+            "Gaming",
+            "Makeup",
+            "Fishing",
+        ];
+
+        var choices = 0b0 | parseInt(encodedChoices);
+
+        let url = new URL(window.location.href);
 
 
-<body>
-    text123
+
+        for (let idx in interests) {
+            let button = document.createElement("button");
+            button.textContent = interests[idx];
+            if ( (choices >> idx) % 2 == 0) {
+                button.className = "button unpicked";
+            } else {
+                button.className = "button";   
+            }
+
+            button.onclick = function() {
+                let shift = 1 << (idx);
+                let old = choices;
+
+                choices ^= shift;
+
+                if (choices < old) {
+                    // unpicked
+                    this.className = "button unpicked";
+                } else {
+                    // picked
+                    this.className = "button";
+                }   
+                
+                console.log(old.toString(2), "xor", shift.toString(2), " = result", choices.toString(2));
+
+                params.set("code", choices.toString(10))
+                url.search = params;
+
+                document.getElementById("result").textContent = url.toString();
+            };
+
+            document.getElementById("interests").appendChild(button);
+        }
+    }
+
+
+
+
+</script>
+
+<body onload=init()>
+    <div>
+        Text 123
+    </div>
+    <p>Interests:</p>
+    <div style=" margin: 10px; border: 1px solid #999;" id="interests"></div>
+
+    <p>Share this URL:</p>
+    <p id="result">
 </body>
+
+</html>
